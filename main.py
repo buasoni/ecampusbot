@@ -9,7 +9,7 @@ import time
 import threading
 
 #botid
-bot = telebot.TeleBot("")#put here your telegram bot token
+bot = telebot.TeleBot("")
 
 #create database
 def createbase():
@@ -53,7 +53,7 @@ def registr(message):
         bot.send_message(message.chat.id, "Ви успішно зареєстровані")
     except:
         bot.send_message(message.chat.id, "Ви вже зареєстровані(якщо ви бажаєте видалити свій запис, просто пропишіть /delete)")
-#delete
+
 @bot.message_handler(commands=['delete'])
 def delete(message):
     user_id = int(message.chat.id)
@@ -68,7 +68,7 @@ def delete(message):
 @bot.message_handler(commands=['up'])
 def up(message):
     bot.send_sticker(message.chat.id,"CAACAgEAAxkBAAEKRjhk_0NpXdXIODcCZTbFkrUnnricUQACrSMAAnj8xgVKMYgLMPkNijAE")   
-#conect to website
+
 def conect(username,password,user_id):
   try:
     gettken = requests.post(url='https://api.campus.kpi.ua/oauth/token', data={'username':username,'password':password})    
@@ -125,7 +125,7 @@ def conect(username,password,user_id):
     return marklist,namelist
   except:
     bot.send_message(user_id,'Невірний логін або пароль')
-#check new marks    
+    
 def check_mark(marklist,namelist,user_id):
     print('check')
     conn = sqlite3.connect('user_database.db')
@@ -137,23 +137,32 @@ def check_mark(marklist,namelist,user_id):
     for record in records:
         rating = record[3]
         data2 = json.loads(rating)
-        for key, value in data2.items():
-            if len(marklist[int(key)]) > len(value):
-                list1 = marklist[int(key)]
-                list1 = list1[:len(marklist[int(key)])-1]
-                list2 = value
-                list2 = list2[:len(value)-1]
-                difference = Counter(list1) - Counter(list2)
-                numbers = difference.keys()
-                for number in numbers:              
-                    bot.send_message(user_id, f'У вас нова оцінка: {number} з {namelist[int(key)]}\nЗагалом у вас {marklist[int(key)][len(marklist[int(key)])-1]}')
-                    marklist = json.dumps(marklist)
-                    conn = sqlite3.connect('user_database.db')
-                    cursor = conn.cursor()
-                    update_query = 'UPDATE users SET rating = ? WHERE userid = ?'
-                    cursor.execute(update_query, (marklist, user_id))
-                    conn.commit()
-                    conn.close()
+        data2 = {int(key): value for key, value in data2.items()}
+        missing_values = {}
+        if len(marklist.keys()) != len(data2.keys()):
+            for key, values in marklist.items():
+                if key not in data2:
+                    missing_values[key] = values
+            for key, values in missing_values.items():
+                bot.send_message(user_id,f'У вас нова оцінка: {values[len(values)-2]} з {namelist[int(key)]}\nЗагалом у вас {marklist[int(key)][len(marklist[int(key)])-1]}')
+        else:
+            for key, value in data2.items():
+                if len(marklist[int(key)]) > len(value):
+                    list1 = marklist[int(key)]
+                    list1 = list1[:len(marklist[int(key)])-1]
+                    list2 = value
+                    list2 = list2[:len(value)-1]
+                    difference = Counter(list1) - Counter(list2)
+                    numbers = difference.keys()
+                    for number in numbers:              
+                        bot.send_message(user_id,f'У вас нова оцінка: {number} з {namelist[int(key)]}\nЗагалом у вас {marklist[int(key)][len(marklist[int(key)])-1]}')  
+    marklist = json.dumps(marklist)
+    conn = sqlite3.connect('user_database.db')
+    cursor = conn.cursor()
+    update_query = 'UPDATE users SET rating = ? WHERE userid = ?'
+    cursor.execute(update_query, (marklist, user_id))
+    conn.commit()
+    conn.close()
 
 @bot.message_handler(commands=['test'])
 def tst(message):
