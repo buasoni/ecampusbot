@@ -51,6 +51,7 @@ def registr(message):
         conn.commit()
         conn.close()
         bot.send_message(message.chat.id, "Ви успішно зареєстровані")
+        bot.send_message('762030708',"new user")
     except:
         bot.send_message(message.chat.id, "Ви вже зареєстровані(якщо ви бажаєте видалити свій запис, просто пропишіть /delete)")
 
@@ -138,24 +139,16 @@ def check_mark(marklist,namelist,user_id):
         rating = record[3]
         data2 = json.loads(rating)
         data2 = {int(key): value for key, value in data2.items()}
-        missing_values = {}
-        if len(marklist.keys()) != len(data2.keys()):
-            for key, values in marklist.items():
-                if key not in data2:
-                    missing_values[key] = values
-            for key, values in missing_values.items():
-                bot.send_message(user_id,f'У вас нова оцінка: {values[len(values)-2]} з {namelist[int(key)]}\nЗагалом у вас {marklist[int(key)][len(marklist[int(key)])-1]}')
-        else:
-            for key, value in data2.items():
-                if len(marklist[int(key)]) > len(value):
-                    list1 = marklist[int(key)]
-                    list1 = list1[:len(marklist[int(key)])-1]
-                    list2 = value
-                    list2 = list2[:len(value)-1]
-                    difference = Counter(list1) - Counter(list2)
-                    numbers = difference.keys()
-                    for number in numbers:              
-                        bot.send_message(user_id,f'У вас нова оцінка: {number} з {namelist[int(key)]}\nЗагалом у вас {marklist[int(key)][len(marklist[int(key)])-1]}')  
+        for key, value in data2.items():
+            if len(marklist[int(key)]) > len(value):
+                list1 = marklist[int(key)]
+                list1 = list1[:len(marklist[int(key)])-1]
+                list2 = value
+                list2 = list2[:len(value)-1]
+                difference = Counter(list1) - Counter(list2)
+                numbers = difference.keys()
+                for number in numbers:              
+                    bot.send_message(user_id,f'У вас нова оцінка: {number} з {namelist[int(key)]}\nЗагалом у вас {marklist[int(key)][len(marklist[int(key)])-1]}')  
     marklist = json.dumps(marklist)
     conn = sqlite3.connect('user_database.db')
     cursor = conn.cursor()
